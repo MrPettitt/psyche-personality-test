@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Psyche | Personality Test</title>
+<meta name="description" content="A free 60-question personality test inspired by the Myers-Briggs framework. Discover your type in about 10 minutes.">
+<meta name="theme-color" content="#f5f0e8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1410;
+    --paper: #f5f0e8;
+    --cream: #ede7d9;
+    --gold: #c9a84c;
+    --gold-text: #86671a;
+    --rust: #b5533c;
+    --slate: #4a5568;
+    --muted: #6f6454;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  :focus-visible { outline: 2px solid var(--rust); outline-offset: 3px; }
+  button { font-family: inherit; }
+  [hidden] { display: none !important; }
+
+  .skip-link { position: absolute; left: 16px; top: -60px; z-index: 2000; background: var(--ink); color: var(--paper); padding: 10px 16px; font-size: 13px; text-decoration: none; transition: top .2s; }
+  .skip-link:focus { top: 12px; }
+
+  .container { max-width: 680px; margin: 0 auto; padding: 0 24px; }
+
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn 0.5s ease; }
+  #intro.active { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* INTRO */
+  #intro { min-height: 100vh; flex-direction: column; justify-content: center; padding: 60px 24px; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; font-weight: 400; }
+  h1 { font-family: 'Playfair Display', serif; font-size: clamp(52px, 8vw, 88px); line-height: 0.95; letter-spacing: -0.02em; margin-bottom: 8px; font-weight: 700; }
+  h1 em { font-style: italic; color: var(--rust); }
+  .subtitle { font-size: 17px; line-height: 1.65; color: var(--slate); max-width: 460px; margin: 28px 0 40px; }
+  .meta-row { display: flex; gap: 32px; margin-bottom: 48px; flex-wrap: wrap; }
+  .meta-item { display: flex; flex-direction: column; gap: 4px; }
+  .meta-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+  .meta-value { font-family: 'Playfair Display', serif; font-size: 20px; }
+  .btn-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: var(--ink); color: var(--paper); border: 1.5px solid var(--ink);
+    padding: 18px 40px; font-size: 15px; font-weight: 500; letter-spacing: 0.06em;
+    cursor: pointer; transition: background 0.25s, transform 0.15s, border-color .25s;
+  }
+  .btn-primary:hover { background: var(--rust); border-color: var(--rust); transform: translateY(-1px); }
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: transparent; color: var(--ink); border: 1.5px solid var(--ink);
+    padding: 18px 32px; font-size: 15px; font-weight: 500; letter-spacing: 0.06em; cursor: pointer; transition: all .25s;
+  }
+  .btn-secondary:hover { background: var(--ink); color: var(--paper); }
+  .decorative-line { width: 60px; height: 1px; background: var(--gold); margin: 40px 0; }
+  .intro-note { font-size: 13px; color: var(--muted); max-width: 440px; line-height: 1.7; }
+  .resume-note { font-size: 13px; color: var(--gold-text); margin-top: 14px; font-weight: 400; min-height: 1em; }
+
+  /* PROGRESS */
+  .progress-bar-wrap { position: fixed; top: 0; left: 0; right: 0; height: 4px; background: var(--cream); z-index: 100; }
+  .progress-bar { height: 100%; background: var(--gold); transition: width 0.4s ease; }
+
+  /* QUIZ */
+  #quiz { padding: 72px 24px 80px; min-height: 100vh; }
+  .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 36px; gap: 12px; }
+  .q-count { font-size: 13px; letter-spacing: 0.1em; color: var(--muted); font-weight: 400; }
+  .q-category { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-text); font-weight: 500; background: rgba(201,168,76,0.16); padding: 4px 10px; }
+
+  .question-text { font-family: 'Playfair Display', serif; font-size: clamp(20px, 3.5vw, 27px); line-height: 1.4; color: var(--ink); margin-bottom: 16px; max-width: 600px; }
+
+  .scenario-box { display: flex; gap: 12px; align-items: flex-start; background: white; border: 1.5px solid var(--cream); border-left: 3px solid var(--gold); padding: 14px 16px; margin-bottom: 28px; border-radius: 2px; }
+  .scenario-icon { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; color: var(--gold-text); }
+  .scenario-icon svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .scenario-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-text); font-weight: 500; margin-bottom: 4px; }
+  .scenario-text { font-size: 13.5px; line-height: 1.6; color: var(--slate); font-style: italic; }
+
+  .question-tip { font-size: 12.5px; color: var(--muted); margin-bottom: 20px; }
+  .kbd-hint { font-size: 12px; color: var(--muted); margin-top: -12px; margin-bottom: 20px; }
+  .kbd-hint kbd { font-family: inherit; border: 1px solid #cfc7b6; border-bottom-width: 2px; padding: 0 6px; border-radius: 3px; background: white; font-size: 11px; }
+  @media (hover: none) { .kbd-hint { display: none; } }
+
+  /* ANSWER BUTTONS */
+  .answer-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 36px; }
+  .answer-btn {
+    width: 100%; padding: 13px 16px;
+    border: 1.5px solid #ddd6c8; background: white; color: var(--ink);
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; gap: 13px;
+    text-align: left; border-radius: 2px;
+  }
+  .answer-btn:hover { border-color: var(--ink); background: var(--cream); }
+  .answer-btn.selected { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .answer-dot { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #8f8676; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .answer-btn.selected .answer-dot { border-color: var(--gold); background: var(--gold); }
+  .answer-btn.selected .answer-dot::after { content: '\2713'; font-size: 11px; color: var(--ink); font-weight: 700; }
+  .answer-text { display: block; }
+  .answer-label { display: block; font-size: 14px; font-weight: 400; line-height: 1.3; color: inherit; }
+  .answer-sublabel { display: block; font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+  .answer-btn.selected .answer-sublabel { color: #cfc6ae; }
+  .answer-key { margin-left: auto; font-size: 11px; color: var(--muted); border: 1px solid #d6cfc0; padding: 0 6px; border-radius: 3px; }
+  .answer-btn.selected .answer-key { color: #cfc6ae; border-color: #5a5045; }
+  @media (hover: none) { .answer-key { display: none; } }
+
+  .nav-row { display: flex; gap: 14px; }
+  .btn-back { background: transparent; border: 1.5px solid #cfc7b6; color: var(--muted); padding: 13px 24px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+  .btn-back:hover { border-color: var(--ink); color: var(--ink); }
+  .btn-next { background: var(--ink); border: 1.5px solid var(--ink); color: var(--paper); padding: 13px 36px; font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; opacity: 0.35; pointer-events: none; }
+  .btn-next.ready { opacity: 1; pointer-events: auto; }
+  .btn-next.ready:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+
+  /* RESULTS */
+  #results { padding: 80px 24px 100px; min-height: 100vh; }
+  .result-eyebrow { font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+  .type-code { font-family: 'Playfair Display', serif; font-size: clamp(56px, 12vw, 110px); line-height: 1; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .type-name { font-family: 'Playfair Display', serif; font-size: clamp(20px, 3vw, 28px); font-style: italic; color: var(--rust); margin-bottom: 32px; }
+  .type-description { font-size: 16px; line-height: 1.75; color: var(--slate); max-width: 560px; margin-bottom: 48px; }
+  .dimensions { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 48px; }
+  @media (max-width: 500px) { .dimensions { grid-template-columns: 1fr; } }
+  .dimension-card { background: var(--cream); padding: 22px; border-left: 3px solid var(--gold); }
+  .dim-pair { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .dim-dominant { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--ink); margin-bottom: 12px; }
+  .dim-bar-wrap { height: 4px; background: #d9d3c7; border-radius: 2px; overflow: hidden; }
+  .dim-bar { height: 100%; background: var(--gold); border-radius: 2px; transition: width 1s ease 0.3s; }
+  .dim-pct { font-size: 12px; color: var(--muted); margin-top: 6px; text-align: right; }
+  .traits-section { margin-bottom: 44px; }
+  .traits-heading { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; font-weight: 400; }
+  .traits-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .trait-pill { background: transparent; border: 1.5px solid var(--ink); padding: 6px 16px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .careers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 48px; }
+  .career-item { background: var(--cream); padding: 12px 16px; font-size: 13px; color: var(--slate); }
+  .famous-section { margin: 36px 0 48px; }
+  .famous-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .famous-name { font-size: 13px; color: var(--slate); padding: 6px 14px; background: var(--cream); }
+  .famous-note { font-size: 12px; color: var(--muted); margin-top: 12px; }
+  hr.divider { border: none; border-top: 1px solid var(--cream); margin: 36px 0; }
+  .result-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn-retake, .btn-action {
+    background: transparent; border: 1.5px solid var(--ink); color: var(--ink);
+    padding: 14px 28px; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.25s;
+  }
+  .btn-retake:hover, .btn-action:hover { background: var(--ink); color: var(--paper); }
+  .btn-action.primary { background: var(--ink); color: var(--paper); }
+  .btn-action.primary:hover { background: var(--rust); border-color: var(--rust); }
+  .copy-status { font-size: 13px; color: var(--gold-text); margin-top: 14px; min-height: 1.2em; font-weight: 400; }
+  .disclaimer { margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--cream); font-size: 12px; line-height: 1.7; color: var(--muted); max-width: 560px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+
+  @media print {
+    body::before, .progress-bar-wrap, .result-actions, .copy-status, .skip-link { display: none !important; }
+    body { background: white; }
+    .screen:not(.active) { display: none !important; }
+    #results { padding: 0; min-height: 0; }
+    .dim-bar { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<main id="main">
+
+<!-- INTRO -->
+<div id="intro" class="screen active">
+  <div class="container">
+    <p class="eyebrow">Personality Assessment</p>
+    <h1>Know your<br><em>Psyche</em></h1>
+    <p class="subtitle">A free personality test inspired by the Myers-Briggs framework. Answer 60 simple questions and discover your type in about 10 minutes.</p>
+    <div class="meta-row">
+      <div class="meta-item"><span class="meta-label">Questions</span><span class="meta-value">60</span></div>
+      <div class="meta-item"><span class="meta-label">Duration</span><span class="meta-value">~10 min</span></div>
+      <div class="meta-item"><span class="meta-label">Personality Types</span><span class="meta-value">16</span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="btnStart" type="button">Begin Assessment <span aria-hidden="true">&rarr;</span></button>
+      <button class="btn-secondary" id="btnResume" type="button" hidden>Resume</button>
+    </div>
+    <p class="resume-note" id="resumeNote" aria-live="polite"></p>
+    <div class="decorative-line"></div>
+    <p class="intro-note">
+      There are no right or wrong answers. Just pick what feels most true to you. Each question includes a real-life example to help you relate to it. Your progress is saved on this device so you can finish later.
+    </p>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="screen">
+  <div class="progress-bar-wrap" role="progressbar" aria-label="Quiz progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="container">
+    <div class="q-header">
+      <span class="q-count" id="qCount" aria-live="polite"></span>
+      <span class="q-category" id="qCategory"></span>
+    </div>
+    <p class="question-text" id="questionText"></p>
+    <div class="scenario-box" id="scenarioBox">
+      <div class="scenario-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.500 10.900c.6.500 1 1.200 1 2.100h5c0-.9.400-1.600 1-2.100A6 6 0 0012 3z"/></svg></div>
+      <div class="scenario-content">
+        <div class="scenario-label">For example</div>
+        <div class="scenario-text" id="scenarioText"></div>
+      </div>
+    </div>
+    <p class="question-tip">Pick the answer that feels most like you, most of the time.</p>
+    <p class="kbd-hint">Keyboard: press <kbd>1</kbd> to <kbd>7</kbd> to answer, <kbd>Enter</kbd> for next, <kbd>Backspace</kbd> to go back.</p>
+    <div class="answer-options" id="answerOptions" role="radiogroup" aria-label="Your answer"></div>
+    <div class="nav-row">
+      <button class="btn-back" id="btnBack" type="button"><span aria-hidden="true">&larr;</span> Back</button>
+      <button class="btn-next" id="btnNext" type="button" aria-disabled="true">Next <span aria-hidden="true">&rarr;</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="results" class="screen">
+  <div class="container">
+    <p class="result-eyebrow">Your Personality Type</p>
+    <div class="type-code" id="typeCode" tabindex="-1"></div>
+    <div class="type-name" id="typeName"></div>
+    <p class="type-description" id="typeDescription"></p>
+    <div class="dimensions" id="dimensions"></div>
+    <div class="traits-section">
+      <p class="traits-heading">Core Traits</p>
+      <div class="traits-grid" id="traitsGrid"></div>
+    </div>
+    <hr class="divider">
+    <p class="traits-heading">Potential Career Paths</p>
+    <div class="careers-grid" id="careersGrid"></div>
+    <div class="famous-section">
+      <p class="traits-heading">Famous <span id="famousType"></span>s</p>
+      <div class="famous-grid" id="famousGrid"></div>
+      <p class="famous-note">Commonly cited, unofficial typings.</p>
+    </div>
+    <div class="result-actions">
+      <button class="btn-action primary" id="btnCopy" type="button">Copy my result</button>
+      <button class="btn-action" id="btnPrint" type="button">Print / save as PDF</button>
+      <button class="btn-retake" id="btnRetake" type="button">Retake Assessment</button>
+    </div>
+    <p class="copy-status" id="copyStatus" role="status" aria-live="polite"></p>
+    <p class="disclaimer">This is an informal self-assessment for reflection and fun. It is inspired by the Myers-Briggs framework but is not the official MBTI instrument, and it is not a clinical or hiring tool. Your answers are processed in your browser and never leave this device.</p>
+  </div>
+</div>
+
+</main>
+
+<script>
+(function () {
+  var STORE_KEY = 'psyche-progress-v1';
+
+  var answerChoices = [
+    { val:0, label:"Strongly agree",    sub:"This is very much like me" },
+    { val:1, label:"Agree",             sub:"This is often like me" },
+    { val:2, label:"Slightly agree",    sub:"This is sometimes like me" },
+    { val:3, label:"Neutral",           sub:"I'm not sure, or it depends" },
+    { val:4, label:"Slightly disagree", sub:"This is rarely like me" },
+    { val:5, label:"Disagree",          sub:"This is usually not like me" },
+    { val:6, label:"Strongly disagree", sub:"This is not like me at all" }
+  ];
+
+  var questions = [
+
+    /* ENERGY (E/I) */
+    { text: "I feel energised after spending time with a large group of people.",
+      scenario: "After a lively birthday party with 30+ guests, you get home feeling pumped up and wide awake rather than tired.",
+      dim:"EI", dir:"A", cat:"Energy" },
+    { text: "I prefer a quiet night at home over going out to a party.",
+      scenario: "A friend invites you to a big Saturday night gathering. Your first instinct is to think up a polite way to stay in with a book or a film instead.",
+      dim:"EI", dir:"B", cat:"Energy" },
+    { text: "I love meeting new people and find it easy to start conversations.",
+      scenario: "You're waiting in a queue and you naturally strike up a chat with the stranger beside you, and genuinely enjoy it.",
+      dim:"EI", dir:"A", cat:"Energy" },
+    { text: "I need time alone to recover after busy social events.",
+      scenario: "After a fun but packed family reunion, you feel you need a full evening alone. Not because it was bad, but just to recharge.",
+      dim:"EI", dir:"B", cat:"Energy" },
+    { text: "I think out loud, and talking through problems helps me figure them out.",
+      scenario: "When you're stuck on a tricky decision at work, you call a colleague, not for their advice but just to talk it through and hear yourself say it.",
+      dim:"EI", dir:"A", cat:"Energy" },
+    { text: "I prefer to think things through privately before sharing my opinion.",
+      scenario: "In a team meeting, when someone asks for ideas, you stay quiet while others speak up. It's not that you have nothing to say, but you want to gather your thoughts first.",
+      dim:"EI", dir:"B", cat:"Energy" },
+    { text: "I enjoy being the centre of attention.",
+      scenario: "When everyone at the dinner table turns to listen to your story, you feel comfortable and energised, not embarrassed.",
+      dim:"EI", dir:"A", cat:"Energy" },
+    { text: "In new groups, I tend to observe and listen before joining in.",
+      scenario: "On your first day at a new job, you mostly watch and listen during group conversations before you start contributing your own views.",
+      dim:"EI", dir:"B", cat:"Energy" },
+    { text: "I make friends quickly and have a wide social circle.",
+      scenario: "After just a few weeks at a new gym or club, you already know most people by name and have made a couple of solid new friends.",
+      dim:"EI", dir:"A", cat:"Energy" },
+    { text: "I have a small number of very close friends rather than many acquaintances.",
+      scenario: "Your contact list isn't huge, but the people on it know you deeply, and you'd rather have three people you'd call at 2am than thirty you barely know.",
+      dim:"EI", dir:"B", cat:"Energy" },
+    { text: "I usually speak up first in group discussions.",
+      scenario: "In a brainstorm or class discussion, you're typically among the first hands up or voices heard. Silence feels like a void you naturally fill.",
+      dim:"EI", dir:"A", cat:"Energy" },
+    { text: "Too much socialising leaves me feeling exhausted.",
+      scenario: "After three consecutive evenings of social plans, even enjoyable ones, you feel genuinely worn out and crave an empty evening.",
+      dim:"EI", dir:"B", cat:"Energy" },
+    { text: "I like working in a busy, collaborative environment.",
+      scenario: "You do your best work in an open-plan office with background chatter and spontaneous conversations, rather than in a silent, private space.",
+      dim:"EI", dir:"A", cat:"Energy" },
+    { text: "I do my best thinking when I have peace and quiet.",
+      scenario: "When you need to solve a hard problem, you close the door, put on headphones, or find a quiet corner, because noise and interruptions break your flow.",
+      dim:"EI", dir:"B", cat:"Energy" },
+    { text: "Group brainstorming is more enjoyable to me than working alone.",
+      scenario: "Given the choice between solving a challenge solo at your desk or workshopping it with a few colleagues, you'd pick the group session every time.",
+      dim:"EI", dir:"A", cat:"Energy" },
+
+    /* INFORMATION (S/N) */
+    { text: "I focus on facts and details rather than big-picture ideas.",
+      scenario: "When reading a business report, you pay close attention to the actual numbers and specifics rather than skimming to the summary conclusions.",
+      dim:"SN", dir:"A", cat:"Information" },
+    { text: "I'm more excited by future possibilities than by current realities.",
+      scenario: "In a strategy meeting, while others debate what's working now, your mind keeps jumping to what the company could look like in five years.",
+      dim:"SN", dir:"B", cat:"Information" },
+    { text: "I trust what has already been proven over ideas that are new and untested.",
+      scenario: "When a colleague suggests a brand-new unproven approach, your first instinct is to ask: has anyone actually done this successfully before?",
+      dim:"SN", dir:"A", cat:"Information" },
+    { text: "I often notice patterns or connections that others seem to miss.",
+      scenario: "While listening to a presentation, you spot a link between two seemingly unrelated data points that no one else has mentioned.",
+      dim:"SN", dir:"B", cat:"Information" },
+    { text: "I like clear, step-by-step instructions when learning something new.",
+      scenario: "When setting up a new piece of software, you follow the official setup guide from step one to the end, rather than exploring it yourself.",
+      dim:"SN", dir:"A", cat:"Information" },
+    { text: "I'd rather figure things out as I go than follow a set plan.",
+      scenario: "On a road trip to a new city, you prefer to wander and discover things organically rather than follow a pre-planned itinerary.",
+      dim:"SN", dir:"B", cat:"Information" },
+    { text: "I pay close attention to the exact words people use.",
+      scenario: "When a friend says 'I'm fine', the slight hesitation in their voice or the specific word they chose tells you something more is going on.",
+      dim:"SN", dir:"A", cat:"Information" },
+    { text: "I often read between the lines to find deeper meaning.",
+      scenario: "While watching a film, you find yourself noticing the symbolic meaning behind small details in the background that most people overlook.",
+      dim:"SN", dir:"B", cat:"Information" },
+    { text: "I prefer learning practical skills I can use right away.",
+      scenario: "Given a choice between a workshop on real-world Excel tricks you can use on Monday, or a lecture on data theory, you'd pick the hands-on workshop.",
+      dim:"SN", dir:"A", cat:"Information" },
+    { text: "I enjoy exploring abstract or theoretical ideas.",
+      scenario: "You genuinely enjoy conversations about philosophy, hypothetical scenarios, or 'what if the universe works like this', even with no practical application.",
+      dim:"SN", dir:"B", cat:"Information" },
+    { text: "I notice small, specific details that others often overlook.",
+      scenario: "You're the first person in the room to notice the typo on the presentation slide, or that someone rearranged the furniture slightly.",
+      dim:"SN", dir:"A", cat:"Information" },
+    { text: "I enjoy imagining how things could be different.",
+      scenario: "Walking past an old, run-down building, your mind naturally pictures all the creative things it could be transformed into.",
+      dim:"SN", dir:"B", cat:"Information" },
+    { text: "I'm a practical, down-to-earth person.",
+      scenario: "When friends start talking about lofty, idealistic plans with no concrete steps, you're the one gently bringing the conversation back to what's actually achievable.",
+      dim:"SN", dir:"A", cat:"Information" },
+    { text: "I often get lost in 'what if' daydreams.",
+      scenario: "You might be washing dishes and suddenly you're twenty minutes deep in imagining an alternate version of your life, a different career, a different city.",
+      dim:"SN", dir:"B", cat:"Information" },
+    { text: "I prefer direct, plain communication over colourful or abstract language.",
+      scenario: "When someone gives you feedback loaded with metaphors and vague impressions, you'd rather they just said plainly: 'Here's what worked and here's what didn't.'",
+      dim:"SN", dir:"A", cat:"Information" },
+
+    /* DECISIONS (T/F) */
+    { text: "When making a decision, logic and evidence matter more to me than feelings.",
+      scenario: "Choosing between two job offers, you build a pros-and-cons list based on salary, growth, and stability, not on which one 'feels' right.",
+      dim:"TF", dir:"A", cat:"Decisions" },
+    { text: "I always consider how a decision will affect people emotionally before I make it.",
+      scenario: "Before restructuring a team at work, your first thought is: how will each person feel about this, and how can I deliver the news with care?",
+      dim:"TF", dir:"B", cat:"Decisions" },
+    { text: "I find it easy to stay objective during a disagreement.",
+      scenario: "When someone challenges your idea in a heated meeting, you can set your ego aside and evaluate their point on its merits without taking it personally.",
+      dim:"TF", dir:"A", cat:"Decisions" },
+    { text: "Criticism of my work can feel personal, even when I know it isn't meant that way.",
+      scenario: "Your manager gives you constructive feedback on a report. Logically you know it's helpful, but you still feel a sting, as if it reflects on you as a person.",
+      dim:"TF", dir:"B", cat:"Decisions" },
+    { text: "Being fair is more important to me than being kind in most situations.",
+      scenario: "If two employees broke the same rule, you'd apply the same consequence to both, even if one had a harder personal situation, because the rule should be equal.",
+      dim:"TF", dir:"A", cat:"Decisions" },
+    { text: "I find it hard to say something hurtful even when it's the truth.",
+      scenario: "A friend asks what you think of their new business idea and it has obvious flaws. You soften the feedback significantly, or avoid saying the hard part at all.",
+      dim:"TF", dir:"B", cat:"Decisions" },
+    { text: "I'm sceptical of decisions based on gut feeling or emotion alone.",
+      scenario: "When a colleague says 'I just have a good feeling about this vendor', you want to see the data before you're convinced.",
+      dim:"TF", dir:"A", cat:"Decisions" },
+    { text: "I often rely on my gut feeling when making important decisions.",
+      scenario: "When meeting a potential business partner, even if everything looks fine on paper, a nagging feeling of unease would make you hesitate.",
+      dim:"TF", dir:"B", cat:"Decisions" },
+    { text: "When giving feedback, I focus on facts rather than worrying about feelings.",
+      scenario: "Reviewing a colleague's presentation, you point out every weak argument and unclear slide directly, because you trust them to handle honest feedback professionally.",
+      dim:"TF", dir:"A", cat:"Decisions" },
+    { text: "Other people's emotions have a strong effect on my own mood.",
+      scenario: "If a close friend is visibly sad, it's hard for you to feel upbeat. Their emotional state seeps into yours without you trying.",
+      dim:"TF", dir:"B", cat:"Decisions" },
+    { text: "I tend to be blunt, even when a gentler approach might work better.",
+      scenario: "Someone asks your opinion on their outfit before a big interview. You tell them honestly it's not the right choice, even though it clearly took effort to put together.",
+      dim:"TF", dir:"A", cat:"Decisions" },
+    { text: "Keeping the peace matters more to me than winning an argument.",
+      scenario: "During a family debate that's getting heated, you back down from a position you still believe in, just to bring the tension down.",
+      dim:"TF", dir:"B", cat:"Decisions" },
+    { text: "I prefer to debate using evidence rather than personal values.",
+      scenario: "In an argument about a social issue, you'd rather cite studies and statistics than appeal to moral instincts or personal stories.",
+      dim:"TF", dir:"A", cat:"Decisions" },
+    { text: "I'm very aware of how my words land with others.",
+      scenario: "Before sending an email, you re-read it imagining how the recipient will feel reading each sentence, adjusting tone even in minor messages.",
+      dim:"TF", dir:"B", cat:"Decisions" },
+    { text: "I prefer clear rules that apply to everyone equally.",
+      scenario: "You believe a workplace policy should be followed consistently. Granting exceptions based on individual circumstances feels unfair to you.",
+      dim:"TF", dir:"A", cat:"Decisions" },
+
+    /* STRUCTURE (J/P) */
+    { text: "I like to have a detailed plan before starting a project.",
+      scenario: "Before beginning a home renovation, you spend time mapping out a full timeline, budget, and checklist before a single tool is picked up.",
+      dim:"JP", dir:"A", cat:"Structure" },
+    { text: "I prefer to keep my options open and adapt as I go.",
+      scenario: "Planning a holiday, you book the flights but leave most days unscheduled. You'd rather see what looks good when you get there.",
+      dim:"JP", dir:"B", cat:"Structure" },
+    { text: "I feel uneasy leaving tasks unfinished.",
+      scenario: "If you start reading a book, even one you're not fully enjoying, you feel compelled to finish it before moving on to the next.",
+      dim:"JP", dir:"A", cat:"Structure" },
+    { text: "I work best in short bursts of inspiration rather than through steady, scheduled effort.",
+      scenario: "You find yourself procrastinating a project for days, then producing your best work in a focused three-hour sprint the night before it's due.",
+      dim:"JP", dir:"B", cat:"Structure" },
+    { text: "I like my home and workspace to be tidy and well-organised.",
+      scenario: "Before you can settle into focused work, you need your desk clear. A messy environment distracts you and makes it hard to concentrate.",
+      dim:"JP", dir:"A", cat:"Structure" },
+    { text: "I enjoy being spontaneous and changing plans at the last minute.",
+      scenario: "A friend texts at 7pm asking if you want to go to a pop-up event tonight. Your immediate reaction is excitement, not annoyance at the short notice.",
+      dim:"JP", dir:"B", cat:"Structure" },
+    { text: "I usually finish tasks well before the deadline.",
+      scenario: "When a report is due Friday, you typically have a solid draft done by Wednesday, and leaving buffer time makes you feel in control.",
+      dim:"JP", dir:"A", cat:"Structure" },
+    { text: "Deadlines stress me out and feel like they get in the way of good work.",
+      scenario: "You find that arbitrary cut-off dates force you to submit something before it's truly ready. You'd do better work with more flexibility.",
+      dim:"JP", dir:"B", cat:"Structure" },
+    { text: "I like routine and predictability in my daily life.",
+      scenario: "You have a morning routine you follow consistently: waking at the same time, eating the same breakfast and following the same order. Disruptions throw you off.",
+      dim:"JP", dir:"A", cat:"Structure" },
+    { text: "I enjoy starting new projects more than finishing old ones.",
+      scenario: "You get a rush of energy when kicking off something new, but find your enthusiasm quietly fades once the project moves into the routine execution phase.",
+      dim:"JP", dir:"B", cat:"Structure" },
+    { text: "I prefer to make decisions quickly and move on.",
+      scenario: "When choosing a restaurant, you pick the first decent option rather than spending twenty minutes reading reviews. Once it's decided, you're fully committed.",
+      dim:"JP", dir:"A", cat:"Structure" },
+    { text: "I often delay decisions while I gather more information.",
+      scenario: "Before buying a new phone, you spend weeks researching comparisons, reading forum threads, and watching reviews, even when the choice seems obvious to others.",
+      dim:"JP", dir:"B", cat:"Structure" },
+    { text: "To-do lists and schedules help me feel organised and in control.",
+      scenario: "On a busy day, you write out everything that needs to get done. Ticking each item off gives you a genuine sense of satisfaction and momentum.",
+      dim:"JP", dir:"A", cat:"Structure" },
+    { text: "Strict schedules feel suffocating, and I'd rather have flexibility.",
+      scenario: "When every hour of your day is blocked out in your calendar, you feel boxed in. You prefer to have a loose sense of priorities and move between them as your energy flows.",
+      dim:"JP", dir:"B", cat:"Structure" },
+    { text: "I feel satisfied when things go exactly according to plan.",
+      scenario: "You planned a dinner party down to the timing of each course. When it all goes to plan, there's a deep sense of satisfaction. It's not just relief, but genuine pride.",
+      dim:"JP", dir:"A", cat:"Structure" }
+  ];
+
+  var typeData = {
+    INTJ:{name:"The Architect",desc:"You are a strategic thinker with a rare mix of imagination and drive. You set ambitious goals, plan carefully, and hold yourself to high standards. You prefer working independently, trust your own insight, and are most satisfied when turning a bold vision into reality.",traits:["Strategic","Decisive","Independent","Analytical","Visionary","Determined"],careers:["Software Engineer","Scientist","Lawyer","Executive","Architect","Strategist"],famous:["Elon Musk","Stephen Hawking","Friedrich Nietzsche","C.S. Lewis"]},
+    INTP:{name:"The Logician",desc:"You are a quiet, precise thinker who loves ideas above all else. You question everything, trust logic over emotion, and delight in exploring complex theories. Though reserved, your mind moves quickly, finding connections and solutions others rarely see.",traits:["Analytical","Objective","Inventive","Curious","Precise","Reserved"],careers:["Philosopher","Programmer","Mathematician","Research Scientist","Professor","Writer"],famous:["Albert Einstein","Charles Darwin","Bill Gates","Blaise Pascal"]},
+    ENTJ:{name:"The Commander",desc:"You are a bold, natural leader. You're energised by challenge, excel at organising people and systems, and make decisions quickly and confidently. You see inefficiency as a problem to solve and are driven to lead others toward ambitious goals.",traits:["Decisive","Strategic","Confident","Efficient","Charismatic","Direct"],careers:["CEO","Lawyer","Financial Analyst","Entrepreneur","Manager","Politician"],famous:["Steve Jobs","Margaret Thatcher","Napoleon Bonaparte","Gordon Ramsay"]},
+    ENTP:{name:"The Debater",desc:"You are quick-witted, curious, and love a good debate. You enjoy challenging ideas and exploring every angle of a problem. Your energy is infectious, and you're at your best when brainstorming bold, unconventional solutions, even if it means ruffling a few feathers.",traits:["Inventive","Quick-witted","Outspoken","Strategic","Curious","Entrepreneurial"],careers:["Entrepreneur","Lawyer","Creative Director","Journalist","Marketer","Inventor"],famous:["Socrates","Voltaire","Thomas Edison","Mark Twain"]},
+    INFJ:{name:"The Advocate",desc:"You are a rare idealist with deep convictions and a quiet intensity. You combine a vision for how the world should be with genuine compassion for others. You devote yourself to causes you believe in, and you inspire people not through volume, but through example.",traits:["Insightful","Principled","Compassionate","Creative","Private","Determined"],careers:["Counsellor","Writer","Psychologist","Non-profit Director","Teacher","Social Worker"],famous:["Nelson Mandela","Mother Teresa","Martin Luther King Jr.","Plato"]},
+    INFP:{name:"The Mediator",desc:"You are guided by your values and your imagination. You have a rich inner world and a deep need for authenticity and meaning. You are empathetic, open-minded, and drawn to helping others, and you express yourself best through creative work.",traits:["Empathetic","Creative","Idealistic","Authentic","Open-minded","Caring"],careers:["Writer","Artist","Therapist","Teacher","Musician","Social Worker"],famous:["J.R.R. Tolkien","William Shakespeare","Johnny Depp","Princess Diana"]},
+    ENFJ:{name:"The Protagonist",desc:"You are warm, charismatic, and deeply attuned to others. You have a gift for inspiring people and bringing out the best in them. You are a natural communicator who leads with empathy, and you feel most fulfilled when helping others grow.",traits:["Charismatic","Empathetic","Inspiring","Organised","Diplomatic","Reliable"],careers:["Teacher","Life Coach","HR Manager","Politician","Counsellor","Diplomat"],famous:["Barack Obama","Oprah Winfrey","Maya Angelou","Jennifer Lawrence"]},
+    ENFP:{name:"The Campaigner",desc:"You are an enthusiastic, imaginative free spirit who sees life as full of possibilities. You connect easily with others, radiate warmth, and are always excited by new ideas and people. You champion authenticity and are happiest when you're making a positive difference.",traits:["Enthusiastic","Creative","Sociable","Optimistic","Empathetic","Curious"],careers:["Journalist","Actor","Counsellor","Designer","Entrepreneur","Marketing Director"],famous:["Robin Williams","Walt Disney","Ellen DeGeneres"]},
+    ISTJ:{name:"The Logistician",desc:"You are dependable, thorough, and steady. You take your responsibilities seriously and always follow through on your commitments. You value proven methods, clear expectations, and hard work, and others know they can always count on you.",traits:["Responsible","Organised","Thorough","Dependable","Traditional","Dedicated"],careers:["Accountant","Military Officer","Inspector","Judge","Manager","Engineer"],famous:["George Washington","Warren Buffett","Queen Elizabeth II","Angela Merkel"]},
+    ISFJ:{name:"The Defender",desc:"You are a warm, caring, and quietly devoted person. You pay close attention to the needs of others and work hard to support the people you love, often without asking for anything in return. Your loyalty and reliability make you deeply trusted.",traits:["Supportive","Reliable","Patient","Observant","Loyal","Warm"],careers:["Nurse","Teacher","Administrator","Social Worker","Librarian","Interior Designer"],famous:["Rosa Parks","Beyoncé","Kate Middleton"]},
+    ESTJ:{name:"The Executive",desc:"You are a confident, practical organiser. You thrive on structure, value tradition and hard work, and have a talent for getting things done. You're a natural administrator: direct, decisive, and excellent at leading others toward clear, concrete results.",traits:["Organised","Direct","Loyal","Traditional","Hard-working","Decisive"],careers:["Judge","Military Officer","Police Officer","Financial Officer","Manager","Principal"],famous:["Michelle Obama","Frank Sinatra","Sonia Sotomayor","Lyndon B. Johnson"]},
+    ESFJ:{name:"The Consul",desc:"You are sociable, caring, and deeply invested in the people around you. You work hard to maintain harmony, fulfil your responsibilities, and make sure everyone feels included and valued. You thrive when your kindness and effort are appreciated.",traits:["Sociable","Caring","Loyal","Warm","Practical","Conscientious"],careers:["Teacher","Healthcare Worker","Social Worker","HR Manager","Event Planner","Pharmacist"],famous:["Taylor Swift","Bill Clinton","Jennifer Garner","Ed Sheeran"]},
+    ISTP:{name:"The Virtuoso",desc:"You are a hands-on problem solver who loves to understand how things work. You're calm under pressure, fiercely independent, and at your best when dealing with concrete, real-world challenges. You prefer doing over talking, and you're remarkably good at it.",traits:["Bold","Practical","Direct","Independent","Rational","Observant"],careers:["Mechanic","Engineer","Forensic Scientist","Pilot","Programmer","Military Officer"],famous:["Clint Eastwood","Michael Jordan","Bruce Lee","Bear Grylls"]},
+    ISFP:{name:"The Adventurer",desc:"You are gentle, artistic, and deeply in tune with your surroundings. You live fully in the present moment and express yourself through creativity and action rather than words. You have strong personal values and an eye for beauty in everyday life.",traits:["Artistic","Gentle","Sensitive","Flexible","Curious","Charming"],careers:["Artist","Musician","Nurse","Fashion Designer","Chef","Veterinarian"],famous:["Michael Jackson","Frida Kahlo","David Bowie","Lana Del Rey"]},
+    ESTP:{name:"The Entrepreneur",desc:"You are energetic, perceptive, and thrive on action. You love engaging with the world directly, adapt quickly to change, and are acutely aware of what's happening around you. You're a natural risk-taker who seizes opportunities the moment they appear.",traits:["Energetic","Perceptive","Direct","Risk-taking","Sociable","Resourceful"],careers:["Entrepreneur","Paramedic","Marketer","Detective","Athlete","Sales Director"],famous:["Ernest Hemingway","Winston Churchill","Angelina Jolie","Jack Nicholson"]},
+    ESFP:{name:"The Entertainer",desc:"You are spontaneous, enthusiastic, and love to share your joy with others. You're highly in tune with how people feel, and you have a talent for making any situation fun and memorable. You live in the moment and bring energy and warmth wherever you go.",traits:["Spontaneous","Energetic","Warm","Playful","Practical","Generous"],careers:["Performer","Event Planner","Sales Representative","Social Worker","Teacher","Coach"],famous:["Adele","Elvis Presley","Marilyn Monroe","Jamie Oliver"]}
+  };
+
+  var total = questions.length;
+  var currentQ = 0;
+  var answers = new Array(total).fill(null);
+  var lastSummary = '';
+
+  function $(id) { return document.getElementById(id); }
+
+  /* ---------- storage (wrapped, because it can be blocked) ---------- */
+  function saveProgress() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ q: currentQ, a: answers })); } catch (e) {}
+  }
+  function loadProgress() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return null;
+      var d = JSON.parse(raw);
+      if (!d || !Array.isArray(d.a) || d.a.length !== total) return null;
+      var done = d.a.filter(function (v) { return v !== null; }).length;
+      return done > 0 ? d : null;
+    } catch (e) { return null; }
+  }
+  function clearProgress() {
+    try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
+    $(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function startQuiz(fresh) {
+    if (fresh) { currentQ = 0; answers = new Array(total).fill(null); clearProgress(); }
+    showScreen('quiz');
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    var q = questions[currentQ];
+    var pct = Math.round((currentQ / total) * 100);
+    $('progressBar').style.width = pct + '%';
+    $('progressWrap').setAttribute('aria-valuenow', pct);
+    $('qCount').textContent = 'Question ' + (currentQ + 1) + ' of ' + total;
+    $('qCategory').textContent = q.cat;
+    $('questionText').textContent = q.text;
+    $('scenarioText').textContent = q.scenario;
+
+    var container = $('answerOptions');
+    container.innerHTML = '';
+    answerChoices.forEach(function (choice, idx) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.setAttribute('role', 'radio');
+      var sel = answers[currentQ] === choice.val;
+      btn.setAttribute('aria-checked', String(sel));
+      btn.className = 'answer-btn' + (sel ? ' selected' : '');
+      btn.innerHTML =
+        '<span class="answer-dot" aria-hidden="true"></span>' +
+        '<span class="answer-text"><span class="answer-label">' + choice.label + '</span>' +
+        '<span class="answer-sublabel">' + choice.sub + '</span></span>' +
+        '<span class="answer-key" aria-hidden="true">' + (idx + 1) + '</span>';
+      btn.addEventListener('click', function () { selectOption(choice.val); });
+      container.appendChild(btn);
+    });
+
+    $('btnBack').style.visibility = currentQ === 0 ? 'hidden' : 'visible';
+    var nextBtn = $('btnNext');
+    nextBtn.innerHTML = (currentQ === total - 1 ? 'See My Results' : 'Next') + ' <span aria-hidden="true">&rarr;</span>';
+    updateNext();
+  }
+
+  function updateNext() {
+    var ready = answers[currentQ] !== null;
+    var nextBtn = $('btnNext');
+    nextBtn.classList.toggle('ready', ready);
+    nextBtn.setAttribute('aria-disabled', String(!ready));
+  }
+
+  function selectOption(val) {
+    answers[currentQ] = val;
+    document.querySelectorAll('.answer-btn').forEach(function (btn, i) {
+      var on = answerChoices[i].val === val;
+      btn.classList.toggle('selected', on);
+      btn.setAttribute('aria-checked', String(on));
+    });
+    updateNext();
+    saveProgress();
+  }
+
+  function nextQuestion() {
+    if (answers[currentQ] === null) return;
+    if (currentQ < total - 1) {
+      currentQ++;
+      saveProgress();
+      renderQuestion();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      showResults();
+    }
+  }
+
+  function prevQuestion() {
+    if (currentQ > 0) {
+      currentQ--;
+      saveProgress();
+      renderQuestion();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  function retake() {
+    currentQ = 0;
+    answers = new Array(total).fill(null);
+    clearProgress();
+    $('copyStatus').textContent = '';
+    initIntro();
+    showScreen('intro');
+  }
+
+  function computeResult() {
+    var scores = { EI:{A:0,B:0}, SN:{A:0,B:0}, TF:{A:0,B:0}, JP:{A:0,B:0} };
+    questions.forEach(function (q, i) {
+      var val = answers[i] === null ? 3 : answers[i];
+      var aScore = q.dir === 'A' ? (6 - val) : val;
+      scores[q.dim].A += aScore;
+      scores[q.dim].B += (6 - aScore);
+    });
+    var letters = { EI:['E','I'], SN:['S','N'], TF:['T','F'], JP:['J','P'] };
+    var names = { E:'Extroversion', I:'Introversion', S:'Sensing', N:'Intuition', T:'Thinking', F:'Feeling', J:'Judging', P:'Perceiving' };
+    var type = '';
+    var dims = [];
+    ['EI','SN','TF','JP'].forEach(function (d) {
+      var tot = scores[d].A + scores[d].B;
+      var pctA = Math.round((scores[d].A / tot) * 100);
+      var first = pctA >= 50;
+      var letter = first ? letters[d][0] : letters[d][1];
+      type += letter;
+      dims.push({
+        pair: letters[d][0] + ' vs ' + letters[d][1],
+        dominant: names[letter],
+        pct: first ? pctA : 100 - pctA
+      });
+    });
+    return { type: type, dims: dims };
+  }
+
+  function showResults() {
+    clearProgress();
+    showScreen('results');
+    var res = computeResult();
+    var type = res.type;
+    var data = typeData[type];
+
+    $('typeCode').textContent = type;
+    $('typeName').textContent = data.name;
+    $('typeDescription').textContent = data.desc;
+    document.title = type + ' ' + data.name + ' | Psyche Personality Test';
+
+    var dimContainer = $('dimensions');
+    dimContainer.innerHTML = '';
+    res.dims.forEach(function (d) {
+      var card = document.createElement('div');
+      card.className = 'dimension-card';
+      card.innerHTML = '<div class="dim-pair">' + d.pair + '</div><div class="dim-dominant">' + d.dominant + '</div>' +
+        '<div class="dim-bar-wrap"><div class="dim-bar" style="width:0%" data-pct="' + d.pct + '"></div></div><div class="dim-pct">' + d.pct + '%</div>';
+      dimContainer.appendChild(card);
+    });
+    setTimeout(function () { document.querySelectorAll('.dim-bar').forEach(function (b) { b.style.width = b.dataset.pct + '%'; }); }, 120);
+
+    function fill(id, items, cls) {
+      var el = $(id); el.innerHTML = '';
+      items.forEach(function (t) { var p = document.createElement('div'); p.className = cls; p.textContent = t; el.appendChild(p); });
+    }
+    fill('traitsGrid', data.traits, 'trait-pill');
+    fill('careersGrid', data.careers, 'career-item');
+    $('famousType').textContent = type;
+    fill('famousGrid', data.famous, 'famous-name');
+
+    lastSummary = 'I got ' + type + ' (' + data.name + ') on the Psyche personality test. ' +
+      res.dims.map(function (d) { return d.dominant + ' ' + d.pct + '%'; }).join(', ') + '.';
+
+    $('typeCode').focus({ preventScroll: true });
+  }
+
+  /* ---------- copy / print ---------- */
+  function setStatus(msg) { $('copyStatus').textContent = msg; setTimeout(function () { $('copyStatus').textContent = ''; }, 3500); }
+  function copyResult() {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(lastSummary).then(function () { setStatus('Copied to your clipboard.'); }, fallbackCopy);
+    } else { fallbackCopy(); }
+  }
+  function fallbackCopy() {
+    var ta = document.createElement('textarea');
+    ta.value = lastSummary; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); setStatus('Copied to your clipboard.'); } catch (e) { setStatus('Copy is not available here. Select the result and copy it manually.'); }
+    document.body.removeChild(ta);
+  }
+
+  /* ---------- intro: resume ---------- */
+  function initIntro() {
+    var saved = loadProgress();
+    var resumeBtn = $('btnResume');
+    if (saved) {
+      var done = saved.a.filter(function (v) { return v !== null; }).length;
+      resumeBtn.hidden = false;
+      resumeBtn.textContent = 'Resume (' + done + ' of ' + total + ' answered)';
+      $('resumeNote').textContent = 'Starting again will clear your saved answers.';
+    } else {
+      resumeBtn.hidden = true;
+      $('resumeNote').textContent = '';
+    }
+  }
+
+  $('btnStart').addEventListener('click', function () { startQuiz(true); });
+  $('btnResume').addEventListener('click', function () {
+    var saved = loadProgress();
+    if (!saved) { startQuiz(true); return; }
+    answers = saved.a;
+    currentQ = Math.min(Math.max(parseInt(saved.q, 10) || 0, 0), total - 1);
+    startQuiz(false);
+  });
+  $('btnNext').addEventListener('click', nextQuestion);
+  $('btnBack').addEventListener('click', prevQuestion);
+  $('btnRetake').addEventListener('click', function () { document.title = 'Psyche | Personality Test'; retake(); });
+  $('btnCopy').addEventListener('click', copyResult);
+  $('btnPrint').addEventListener('click', function () { window.print(); });
+
+  /* ---------- keyboard ---------- */
+  document.addEventListener('keydown', function (e) {
+    if (!$('quiz').classList.contains('active')) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var n = parseInt(e.key, 10);
+    if (n >= 1 && n <= 7) { selectOption(answerChoices[n - 1].val); e.preventDefault(); return; }
+    if (e.key === 'Enter' && document.activeElement.tagName !== 'BUTTON') { nextQuestion(); e.preventDefault(); }
+    else if (e.key === 'Backspace') { prevQuestion(); e.preventDefault(); }
+  });
+
+  initIntro();
+})();
+</script>
+</body>
+</html>
